@@ -9,56 +9,59 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#0d0d0d;color:#ccc;font-family:"Outfit",sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 #topbar{
-  display:flex;align-items:center;gap:10px;padding:8px 14px;
-  background:#1a1a1a;border-bottom:1px solid #333;flex-shrink:0;
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:#e8e4de;border-bottom:1px solid #ccc;flex-shrink:0;flex-wrap:wrap;
 }
-#topbar h1{font-size:14px;color:#f0c040;letter-spacing:2px;}
+#topbar h1{font-size:14px;color:#a07010;letter-spacing:2px;}
 .btn-icon{
-  background:none;border:1px solid #444;color:#aaa;border-radius:6px;height:28px;
+  background:none;border:1px solid #bbb;color:#555;border-radius:6px;height:28px;
   cursor:pointer;font-family:inherit;font-size:12px;padding:0 10px;transition:all .15s;
 }
-.btn-icon:hover{border-color:#f0c040;color:#f0c040;}
-.sep{width:1px;height:20px;background:#333;margin:0 4px;}
+.btn-icon:hover{border-color:#a07010;color:#a07010;}
+.sep{width:1px;height:20px;background:#ccc;margin:0 2px;}
 #main{display:flex;flex:1;overflow:hidden;}
-#left{width:200px;background:#1a1a1a;border-right:1px solid #333;padding:12px;overflow-y:auto;}
-#left h3{font-size:11px;color:#666;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;}
-.tool-btn{
-  width:100%;padding:10px;margin-bottom:6px;background:#222;border:1px solid #444;
-  color:#aaa;cursor:pointer;border-radius:3px;font-size:11px;transition:all .15s;
+#left{
+  width:180px;background:#e8e4de;border-right:1px solid #ccc;
+  padding:12px;overflow-y:auto;flex-shrink:0;
 }
-.tool-btn:hover{background:#2a2a2a;border-color:#f0c040;}
-.tool-btn.active{background:#3a2800;border-color:#f0c040;color:#f0c040;}
+#left h3{font-size:10px;color:#999;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;}
+.tool-btn{
+  width:100%;padding:9px;margin-bottom:5px;background:#ddd8d0;border:1px solid #ccc;
+  color:#555;cursor:pointer;border-radius:3px;font-size:11px;transition:all .15s;text-align:left;
+}
+.tool-btn:hover{background:#d0c8bc;border-color:#a07010;}
+.tool-btn.active{background:#f0e8d0;border-color:#a07010;color:#a07010;}
+.mode-row{display:flex;gap:4px;margin-bottom:14px;}
 .mode-btn{
-  width:48%;padding:8px;background:#222;border:1px solid #444;color:#aaa;
+  flex:1;padding:7px;background:#ddd8d0;border:1px solid #ccc;color:#555;
   cursor:pointer;border-radius:3px;font-size:10px;transition:all .15s;
 }
-.mode-btn:hover{background:#2a2a2a;}
-.mode-btn.active{background:#2a0a0a;border-color:#e04040;color:#e04040;}
-#right{flex:1;position:relative;}
-#three-canvas{display:block;width:100%;height:100%;}
-#hint{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  color:#333;font-size:12px;text-align:center;pointer-events:none;
+.mode-btn.add.active{background:#d0ead0;border-color:#60a060;color:#407040;}
+.mode-btn.sub.active{background:#ead0d0;border-color:#c06060;color:#904040;}
+#right{flex:1;position:relative;overflow:hidden;cursor:crosshair;}
+#svg-container{width:100%;height:100%;position:relative;}
+#vox-svg{width:100%;height:100%;display:block;}
+#ghost-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.ctrl{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;}
+.ctrl label{font-size:10px;color:#999;}
+.ctrl input[type=range]{accent-color:#a07010;width:100%;}
+.ctrl span{font-size:10px;color:#a07010;text-align:right;}
+.color-row{display:flex;gap:4px;margin-bottom:5px;flex-wrap:wrap;}
+.color-swatch{
+  width:24px;height:24px;border:2px solid transparent;border-radius:3px;cursor:pointer;
+  transition:border-color .1s;
 }
-.modal-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;
-  align-items:center;justify-content:center;
-}
+.color-swatch.active{border-color:#333;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal-box{
-  background:#1a1a1a;border:1px solid #333;max-width:420px;width:92%;
-  padding:28px;position:relative;border-radius:4px;
-}
-.modal-box h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:14px;color:#f0c040;font-weight:500;}
-.modal-box p{font-size:12px;line-height:1.8;color:#888;}
-.modal-box strong{color:#ccc;}
-.modal-close{
-  position:absolute;top:16px;right:16px;background:none;border:none;
-  font-size:20px;cursor:pointer;color:#666;
-}
-.modal-close:hover{color:#f0c040;}
+.modal-box{background:#f0ede8;border:1px solid #ccc;max-width:420px;width:92%;padding:28px;position:relative;border-radius:4px;}
+.modal-box h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:14px;color:#a07010;font-weight:500;}
+.modal-box p{font-size:12px;line-height:1.8;color:#666;}
+.modal-box strong{color:#333;}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#999;}
+.modal-close:hover{color:#a07010;}
 </style>
 </head>
 <body>
@@ -67,22 +70,37 @@ body{background:#0d0d0d;color:#ccc;font-family:"Outfit",sans-serif;height:100vh;
   <div class="modal-box">
     <button class="modal-close" id="about-close">✕</button>
     <h2>Vox It ✦</h2>
-    <p>矢量版 3D 构成工具。在 256×256 底座上通过几何体的加减运算创建等轴测插图。</p>
+    <p>基于 Heerich.js 的等轴测体素构成工具。在网格上放置/删除立方体，创建矢量 3D 插图。</p>
     <p style="margin-top:12px;">
-      <strong>加法模式</strong> — 放置立方体/圆柱/球，堆叠形状。<br/>
-      <strong>减法模式</strong> — 从底座上雕刻、挖洞。<br/>
-      <strong>CSG 布尔运算</strong> — 实时计算，矢量输出。
+      <strong>Add 模式</strong> — 点击放置体素。<br/>
+      <strong>Subtract 模式</strong> — 点击删除体素。<br/>
+      <strong>点击已有体素</strong> — 堆叠在上方。<br/>
+      <strong>Shift + 拖拽</strong> — 旋转视角。
     </p>
-    <p style="margin-top:12px;color:#555;font-size:11px;">导出 PNG 用于插图设计，SVG 用于矢量编辑。</p>
+    <p style="margin-top:12px;color:#aaa;font-size:11px;">渲染引擎：<a href="https://github.com/meodai/heerich" style="color:#a07010;">heerich.js</a> by meodai</p>
   </div>
 </div>
 
 <div id="topbar">
   <h1>Vox It ✦</h1>
-  <button class="btn-icon" id="btn-theme" title="Toggle dark/light mode">☀</button>
   <div class="sep"></div>
+  <input id="text-input" type="text" value="VOX" maxlength="8" placeholder="text..."
+    style="width:80px;background:#f8f6f2;border:1px solid #ccc;color:#333;padding:3px 8px;font-size:13px;font-family:inherit;border-radius:3px;letter-spacing:2px;text-transform:uppercase;"/>
+  <select id="text-size" style="height:28px;background:#f8f6f2;border:1px solid #ccc;color:#555;font-size:11px;font-family:inherit;border-radius:3px;padding:0 4px;">
+    <option value="1">1×</option>
+    <option value="2" selected>2×</option>
+    <option value="3">3×</option>
+  </select>
+  <button class="btn-icon" id="btn-gen-text" style="border-color:#a07010;color:#a07010;">Generate</button>
+  <div class="sep"></div>
+  <button class="btn-icon" id="btn-undo">Undo</button>
   <button class="btn-icon" id="btn-reset">Reset</button>
-  <button class="btn-icon" id="btn-export">PNG</button>
+  <button class="btn-icon" id="btn-export-svg">SVG</button>
+  <button class="btn-icon" id="btn-export-png">PNG</button>
+  <div class="sep"></div>
+  <label style="font-size:11px;color:#999;">Tile</label>
+  <input id="tile-size-input" type="number" min="10" max="100" step="5" value="28"
+    style="width:52px;background:#f8f6f2;border:1px solid #ccc;color:#333;padding:3px 6px;font-size:11px;font-family:inherit;border-radius:3px;text-align:center;"/>
   <div class="sep"></div>
   <button class="btn-icon" id="btn-about">i</button>
 </div>
@@ -90,242 +108,398 @@ body{background:#0d0d0d;color:#ccc;font-family:"Outfit",sans-serif;height:100vh;
 <div id="main">
   <div id="left">
     <h3>Mode</h3>
-    <div style="display:flex;gap:4px;margin-bottom:16px;">
-      <button class="mode-btn active" data-mode="add">+ Add</button>
-      <button class="mode-btn" data-mode="subtract">− Subtract</button>
+    <div class="mode-row">
+      <button class="mode-btn add active" data-mode="add">+ Add</button>
+      <button class="mode-btn sub" data-mode="subtract">− Sub</button>
     </div>
-    
-    <h3>Shapes</h3>
-    <button class="tool-btn active" data-shape="box">Cube</button>
-    <button class="tool-btn" data-shape="cylinder">Cylinder</button>
-    <button class="tool-btn" data-shape="sphere">Sphere</button>
+
+    <h3>Camera</h3>
+    <div class="ctrl">
+      <label>Angle <span id="cam-angle-val">315°</span></label>
+      <input type="range" id="cam-angle" min="0" max="360" value="315"/>
+    </div>
+    <div class="ctrl">
+      <label>Elevation <span id="cam-elev-val">5</span></label>
+      <input type="range" id="cam-elev" min="-5" max="15" step="0.5" value="5"/>
+    </div>
+
+    <h3>Height</h3>
+    <div class="ctrl">
+      <label>Layers <span id="height-val">1</span></label>
+      <input type="range" id="height-slider" min="1" max="12" value="1"/>
+    </div>
+
+    <h3>Color</h3>
+    <div class="color-row" id="color-row"></div>
+    <div class="ctrl" style="margin-top:4px;">
+      <label>Custom</label>
+      <input type="color" id="custom-color" value="#aaaaaa" style="width:100%;height:26px;border:1px solid #ccc;border-radius:3px;cursor:pointer;"/>
+    </div>
   </div>
-  
+
   <div id="right">
-    <canvas id="three-canvas"></canvas>
-    <div id="hint">Select a shape and click to place</div>
+    <div id="svg-container">
+      <svg id="vox-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="ghost-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
   </div>
 </div>
 
-
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.16/build/index.module.js';
+import { Heerich } from './heerich.js';
 
-// ─── SCENE SETUP ──────────────────────────────────────────────────────────────
-const threeCanvas = document.getElementById('three-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// ─── PALETTE ──────────────────────────────────────────────────────────────────
+const PALETTE = [
+  '#d4cfc8','#b8b0a4','#8c8478',
+  '#e8d8c0','#c4a87c','#8c6840',
+  '#c8d8e0','#88b0c0','#406880',
+  '#c8e0c8','#88b888','#407840',
+  '#e8c8c8','#c08080','#804040',
+  '#e8e0c0','#c0b060','#807020',
+];
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color('#0d0d0d');
-
-// Isometric orthographic camera
-const aspect = 1;
-const camSize = 200;
-const camera = new THREE.OrthographicCamera(-camSize, camSize, camSize, -camSize, 0.1, 2000);
-camera.position.set(300, 300, 300);
-camera.lookAt(0, 0, 0);
-
-const controls = new OrbitControls(camera, threeCanvas);
-controls.enableDamping = true;
-controls.dampingFactor = 0.07;
-controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-
-// ─── LIGHTS ───────────────────────────────────────────────────────────────────
-const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambient);
-
-const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-sunLight.position.set(200, 400, 200);
-sunLight.castShadow = true;
-scene.add(sunLight);
-
-const fillLight = new THREE.DirectionalLight(0xaabbff, 0.4);
-fillLight.position.set(-200, 100, -100);
-scene.add(fillLight);
-
-// ─── MATERIALS ────────────────────────────────────────────────────────────────
-const paletteFace = [0xe8e0d0, 0xd4c8b0, 0xb8a88a]; // top, left, right face colors
-function makeMaterial(hex) {
-  return new THREE.MeshToonMaterial({ color: hex });
-}
-const matTop   = makeMaterial(paletteFace[0]);
-const matSide  = makeMaterial(paletteFace[1]);
-const matEdge  = new THREE.LineBasicMaterial({ color: 0x1a1a1a });
-
-// ─── BASE SLAB ────────────────────────────────────────────────────────────────
-const BASE_SIZE = 256;
-const BASE_THICK = 20;
-const UNIT = 32; // grid unit size
-
-let baseResult = null; // the current CSG result mesh
-const evaluator = new Evaluator();
-
-// Build initial base brush
-function makeBaseBrush() {
-  const geo = new THREE.BoxGeometry(BASE_SIZE, BASE_THICK, BASE_SIZE);
-  const brush = new Brush(geo, new THREE.MeshToonMaterial({ color: 0xd4c8b0 }));
-  brush.position.set(0, 0, 0);
-  brush.updateMatrixWorld();
-  return brush;
-}
-
-let baseBrush = makeBaseBrush();
-let operations = []; // list of {shape, mode, position, size}
-
-function rebuildCSG() {
-  if (baseResult) {
-    scene.remove(baseResult);
-    baseResult.geometry.dispose();
-  }
-
-  let current = baseBrush;
-  for (const op of operations) {
-    const geo = makeShapeGeo(op);
-    const brush = new Brush(geo, new THREE.MeshToonMaterial({ color: op.mode === 'add' ? 0xe8e0d0 : 0xd4c8b0 }));
-    brush.position.copy(op.position);
-    brush.updateMatrixWorld();
-    const type = op.mode === 'add' ? ADDITION : SUBTRACTION;
-    current = evaluator.evaluate(current, brush, type);
-  }
-
-  baseResult = current;
-  baseResult.castShadow = true;
-  baseResult.receiveShadow = true;
-  scene.add(baseResult);
-
-  // Add edge lines
-  scene.children.filter(c => c.isLineSegments).forEach(l => scene.remove(l));
-  const edges = new THREE.EdgesGeometry(baseResult.geometry, 15);
-  const lines = new THREE.LineSegments(edges, matEdge);
-  scene.add(lines);
-
-  document.getElementById('hint').style.display = 'none';
-}
-
-function makeShapeGeo(op) {
-  const s = op.size;
-  if (op.shape === 'box')      return new THREE.BoxGeometry(s, s, s);
-  if (op.shape === 'cylinder') return new THREE.CylinderGeometry(s/2, s/2, s, 16);
-  if (op.shape === 'sphere')   return new THREE.SphereGeometry(s/2, 16, 12);
-  return new THREE.BoxGeometry(s, s, s);
-}
-
-// Initial build
-rebuildCSG();
-
-// ─── GRID HELPER ──────────────────────────────────────────────────────────────
-const grid = new THREE.GridHelper(BASE_SIZE, BASE_SIZE / UNIT, 0x444444, 0x333333);
-grid.position.y = BASE_THICK / 2 + 0.5;
-scene.add(grid);
-
-// ─── INTERACTION ──────────────────────────────────────────────────────────────
-let currentMode = 'add';
-let currentShape = 'box';
-
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-// Hover plane (top of base slab)
-const hoverPlane = new THREE.Mesh(
-  new THREE.PlaneGeometry(BASE_SIZE * 2, BASE_SIZE * 2),
-  new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })
-);
-hoverPlane.rotation.x = -Math.PI / 2;
-hoverPlane.position.y = BASE_THICK / 2 + 0.5;
-scene.add(hoverPlane);
-
-// Ghost preview
-let ghostMesh = null;
-function updateGhost(pos) {
-  if (ghostMesh) scene.remove(ghostMesh);
-  const geo = makeShapeGeo({ shape: currentShape, size: UNIT });
-  const mat = new THREE.MeshToonMaterial({
-    color: currentMode === 'add' ? 0xf0c040 : 0xe04040,
-    transparent: true, opacity: 0.5
+let currentColor = PALETTE[0];
+const colorRow = document.getElementById('color-row');
+PALETTE.forEach(hex => {
+  const sw = document.createElement('div');
+  sw.className = 'color-swatch' + (hex === currentColor ? ' active' : '');
+  sw.style.background = hex;
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    currentColor = hex;
+    document.getElementById('custom-color').value = hex;
   });
-  ghostMesh = new THREE.Mesh(geo, mat);
-  ghostMesh.position.copy(pos);
-  ghostMesh.position.y = BASE_THICK / 2 + UNIT / 2;
-  scene.add(ghostMesh);
-}
-
-function snapToGrid(x, z) {
-  return new THREE.Vector3(
-    Math.round(x / UNIT) * UNIT,
-    BASE_THICK / 2 + UNIT / 2,
-    Math.round(z / UNIT) * UNIT
-  );
-}
-
-threeCanvas.addEventListener('mousemove', e => {
-  const rect = threeCanvas.getBoundingClientRect();
-  mouse.x =  (e.clientX - rect.left) / rect.width  * 2 - 1;
-  mouse.y = -(e.clientY - rect.top)  / rect.height * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObject(hoverPlane);
-  if (hits.length) {
-    const snapped = snapToGrid(hits[0].point.x, hits[0].point.z);
-    updateGhost(snapped);
-  }
+  colorRow.appendChild(sw);
+});
+document.getElementById('custom-color').addEventListener('input', e => {
+  currentColor = e.target.value;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
 });
 
-threeCanvas.addEventListener('click', e => {
-  const rect = threeCanvas.getBoundingClientRect();
-  mouse.x =  (e.clientX - rect.left) / rect.width  * 2 - 1;
-  mouse.y = -(e.clientY - rect.top)  / rect.height * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObject(hoverPlane);
-  if (!hits.length) return;
-  const snapped = snapToGrid(hits[0].point.x, hits[0].point.z);
-  operations.push({
-    shape: currentShape,
-    mode: currentMode,
-    position: new THREE.Vector3(snapped.x, BASE_THICK / 2 + UNIT / 2, snapped.z),
-    size: UNIT
+// ─── HEERICH SETUP ────────────────────────────────────────────────────────────
+let TILE = 28;
+let BASE_SIZE = 6;
+let camAngle = 315;
+let camElev = 5;
+
+function makeEngine() {
+  return new Heerich({
+    tile: [TILE, TILE * 0.6],
+    style: { fill: '#d4cfc8', stroke: '#2a2a2a', strokeWidth: 0.5 },
+    camera: { type: 'oblique', angle: camAngle, distance: camElev }
   });
-  rebuildCSG();
-  if (ghostMesh) { scene.remove(ghostMesh); ghostMesh = null; }
+}
+
+let engine = makeEngine();
+const voxSvg = document.getElementById('vox-svg');
+const ghostSvg = document.getElementById('ghost-svg');
+
+function buildBase() {
+  const half = Math.floor(BASE_SIZE / 2);
+  for (let x = -half; x < half; x++) {
+    for (let z = -half; z < half; z++) {
+      engine.addBox({ 
+        position: [x, 0, z], 
+        size: [1, 1, 1], 
+        style: { fill: '#e8e4de', stroke: '#aaa', strokeWidth: 0.4 }
+      });
+    }
+  }
+}
+buildBase();
+
+// History for undo
+const history = []; // each entry: {x,y,z,mode,color}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const svg = engine.toSVG({ padding: 40 });
+  // Extract inner content from SVG string
+  const inner = svg.replace(/<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+  // Copy viewBox from engine
+  const match = svg.match(/viewBox="([^"]+)"/);
+  if (match) voxSvg.setAttribute('viewBox', match[1]);
+  voxSvg.innerHTML = inner;
+}
+
+render(); // initial empty render
+
+// ─── COORDINATE SYSTEM ────────────────────────────────────────────────────────
+// Map SVG click → voxel grid coords
+function svgPoint(e) {
+  const rect = voxSvg.getBoundingClientRect();
+  const pt = voxSvg.createSVGPoint();
+  pt.x = e.clientX - rect.left;
+  pt.y = e.clientY - rect.top;
+  // Transform to SVG coordinate space
+  const vb = voxSvg.getAttribute('viewBox');
+  if (!vb) return null;
+  const [vx, vy, vw, vh] = vb.split(' ').map(Number);
+  return {
+    svgX: vx + (pt.x / rect.width) * vw,
+    svgY: vy + (pt.y / rect.height) * vh,
+  };
+}
+
+// Convert SVG coords to voxel grid (oblique projection inverse)
+function svgToVoxel(svgX, svgY) {
+  const tw = TILE;
+  const th = TILE * 0.6;
+  const rad = camAngle * Math.PI / 180;
+  const dx = Math.cos(rad) * camElev;
+  const dy = Math.sin(rad) * camElev;
+
+  // Approximate inverse: find x,z from projected 2D
+  const x = Math.round((svgX / tw + svgY / th) / 2);
+  const z = Math.round((svgY / th - svgX / tw) / 2);
+  return { x, z };
+}
+
+let currentHeight = 1;
+let currentMode = 'add';
+
+// Track occupied voxels for stacking
+const voxelMap = new Map(); // "x,z" -> max y
+
+function voxelKey(x, z) { return `${x},${z}`; }
+
+function placeVoxel(x, z) {
+  const key = voxelKey(x, z);
+  const baseY = currentMode === 'add' ? (voxelMap.get(key) ?? 0) : 0;
+  const h = currentHeight;
+  const col = currentColor;
+
+  if (currentMode === 'add') {
+    for (let i = 0; i < h; i++) {
+      const y = baseY + 1 + i;
+      const style = makeFaceStyle(col);
+      engine.addBox({ position: [x, y, z], size: [1, 1, 1], style });
+      history.push({ x, y, z, mode: 'add', color: col });
+    }
+    voxelMap.set(key, baseY + h);
+  } else {
+    const topY = voxelMap.get(key) ?? 0;
+    if (topY <= 0) return;
+    for (let i = 0; i < Math.min(h, topY); i++) {
+      const y = topY - i;
+      engine.removeBox({ position: [x, y, z], size: [1, 1, 1] });
+      history.push({ x, y, z, mode: 'subtract' });
+    }
+    voxelMap.set(key, Math.max(0, topY - h));
+  }
+  render();
+}
+
+function makeFaceStyle(hex) {
+  return (face) => {
+    if (face === 'top')   return { fill: lighten(hex, 0.15), stroke: '#1a1a1a', strokeWidth: 0.8 };
+    if (face === 'left')  return { fill: hex, stroke: '#1a1a1a', strokeWidth: 0.8 };
+    if (face === 'right') return { fill: darken(hex, 0.15), stroke: '#1a1a1a', strokeWidth: 0.8 };
+    return { fill: hex, stroke: '#1a1a1a', strokeWidth: 0.8 };
+  };
+}
+
+function lighten(hex, amt) {
+  const [r, g, b] = hexToRgb(hex);
+  return rgbToHex(Math.min(255, r + 255*amt), Math.min(255, g + 255*amt), Math.min(255, b + 255*amt));
+}
+function darken(hex, amt) {
+  const [r, g, b] = hexToRgb(hex);
+  return rgbToHex(Math.max(0, r - 255*amt), Math.max(0, g - 255*amt), Math.max(0, b - 255*amt));
+}
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgbToHex(r, g, b) {
+  return '#' + [r,g,b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
+}
+
+// ─── CLICK ────────────────────────────────────────────────────────────────────
+voxSvg.addEventListener('click', e => {
+  const pt = svgPoint(e);
+  if (!pt) return;
+  const { x, z } = svgToVoxel(pt.svgX, pt.svgY);
+  placeVoxel(x, z);
 });
 
 // ─── UI BINDINGS ──────────────────────────────────────────────────────────────
-document.querySelectorAll('.tool-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentShape = btn.dataset.shape;
+document.querySelectorAll('.mode-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    currentMode = b.dataset.mode;
   });
 });
 
-document.querySelectorAll('.mode-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentMode = btn.dataset.mode;
-    if (btn.dataset.mode === 'subtract') {
-      btn.style.background = '#2a0a0a';
-      btn.style.borderColor = '#e04040';
-      btn.style.color = '#e04040';
+document.getElementById('height-slider').addEventListener('input', e => {
+  currentHeight = parseInt(e.target.value);
+  document.getElementById('height-val').textContent = currentHeight;
+});
+
+document.getElementById('cam-angle').addEventListener('input', e => {
+  camAngle = parseInt(e.target.value);
+  document.getElementById('cam-angle-val').textContent = camAngle + '°';
+  engine.setCamera({ type: 'oblique', angle: camAngle, distance: camElev });
+  render();
+});
+
+document.getElementById('cam-elev').addEventListener('input', e => {
+  camElev = parseFloat(e.target.value);
+  document.getElementById('cam-elev-val').textContent = camElev;
+  engine.setCamera({ type: 'oblique', angle: camAngle, distance: camElev });
+  render();
+});
+
+document.getElementById('tile-size-input').addEventListener('change', e => {
+  TILE = Math.max(10, Math.min(100, parseInt(e.target.value) || 28));
+  e.target.value = TILE;
+  const snap = engine.toJSON();
+  engine = makeEngine();
+  engine.fromJSON(snap);
+  render();
+});
+
+document.getElementById('btn-apply-base').addEventListener('click', () => {
+  BASE_SIZE = Math.max(2, Math.min(20, parseInt(document.getElementById('base-size-input').value) || 6));
+  document.getElementById('base-size-input').value = BASE_SIZE;
+  engine.clear();
+  buildBase();
+  history.length = 0;
+  voxelMap.clear();
+  render();
+});
+
+document.getElementById('btn-undo').addEventListener('click', () => {
+  const last = history.pop();
+  if (!last) return;
+  // Rebuild from scratch
+  engine = makeEngine();
+  voxelMap.clear();
+  for (const h of history) {
+    if (h.mode === 'add') {
+      engine.addBox({ position: [h.x, h.y, h.z], size: [1,1,1], style: makeFaceStyle(h.color || currentColor) });
+      const key = voxelKey(h.x, h.z);
+      voxelMap.set(key, Math.max(voxelMap.get(key) ?? -1, h.y));
     }
-  });
+  }
+  render();
 });
 
 document.getElementById('btn-reset').addEventListener('click', () => {
-  operations = [];
-  rebuildCSG();
+  engine.clear();
+  history.length = 0;
+  voxelMap.clear();
+  render();
 });
 
-// Dark/light toggle
-let isDark = true;
-document.getElementById('btn-theme').addEventListener('click', function() {
-  isDark = !isDark;
-  this.textContent = isDark ? '☀' : '☽';
-  scene.background = new THREE.Color(isDark ? '#0d0d0d' : '#f0ede8');
-  document.body.style.background = isDark ? '#0d0d0d' : '#f0ede8';
+// ─── TEXT → VOXEL ─────────────────────────────────────────────────────────────
+function textToVoxels(text, scale) {
+  const FONT_SIZE = 8; // render at 8px pixel font
+  const offscreen = document.createElement('canvas');
+  offscreen.width = text.length * FONT_SIZE * scale + 8;
+  offscreen.height = FONT_SIZE * scale + 4;
+  const ctx = offscreen.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.font = `bold ${FONT_SIZE * scale}px monospace`;
+  ctx.textBaseline = 'top';
+  ctx.fillText(text.toUpperCase(), 2, 2);
+
+  const pixels = ctx.getImageData(0, 0, offscreen.width, offscreen.height).data;
+  const W = offscreen.width, H = offscreen.height;
+
+  // Sample every `scale` pixels to get logical grid
+  const cols = Math.ceil(W / scale);
+  const rows = Math.ceil(H / scale);
+
+  // Clear and rebuild
+  engine.clear();
+  history.length = 0;
+  voxelMap.clear();
+
+  const offsetX = -Math.floor(cols / 2);
+  const offsetZ = -Math.floor(rows / 2);
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      // Sample center of each logical pixel
+      const px = Math.min(col * scale + Math.floor(scale/2), W-1);
+      const py = Math.min(row * scale + Math.floor(scale/2), H-1);
+      const idx = (py * W + px) * 4;
+      const alpha = pixels[idx + 3];
+      const brightness = pixels[idx]; // R channel
+      if (alpha > 128 && brightness < 128) {
+        const x = col + offsetX;
+        const z = row + offsetZ;
+        engine.addBox({
+          position: [x, 1, z],
+          size: [1, 1, 1],
+          style: makeFaceStyle(currentColor)
+        });
+        voxelMap.set(voxelKey(x, z), 1);
+      }
+    }
+  }
+
+  // Add base around text
+  const pad = 1;
+  for (let col = -pad; col < cols + pad; col++) {
+    for (let row = -pad; row < rows + pad; row++) {
+      const x = col + offsetX;
+      const z = row + offsetZ;
+      engine.addBox({
+        position: [x, 0, z],
+        size: [1, 1, 1],
+        style: { fill: '#e8e4de', stroke: '#aaa', strokeWidth: 0.4 }
+      });
+    }
+  }
+  render();
+}
+
+document.getElementById('btn-gen-text').addEventListener('click', () => {
+  const text = document.getElementById('text-input').value || 'VOX';
+  const scale = parseInt(document.getElementById('text-size').value);
+  textToVoxels(text, scale);
+});
+
+// Auto-generate on Enter key in text input
+document.getElementById('text-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-gen-text').click();
+});
+
+document.getElementById('btn-export-svg').addEventListener('click', () => {
+  const svg = engine.toSVG({ padding: 40 });
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'voxit.svg';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('btn-export-png').addEventListener('click', () => {
+  const svg = engine.toSVG({ padding: 40 });
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const offscreen = document.createElement('canvas');
+    offscreen.width = img.width || 800;
+    offscreen.height = img.height || 800;
+    const ctx = offscreen.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    offscreen.toBlob(b => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'voxit.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
+  img.src = url;
 });
 
 // About modal
@@ -333,41 +507,6 @@ const aboutModal = document.getElementById('about-modal');
 document.getElementById('btn-about').addEventListener('click', () => aboutModal.classList.add('open'));
 document.getElementById('about-close').addEventListener('click', () => aboutModal.classList.remove('open'));
 aboutModal.addEventListener('click', e => { if (e.target === aboutModal) aboutModal.classList.remove('open'); });
-
-// Export PNG
-document.getElementById('btn-export').addEventListener('click', () => {
-  renderer.render(scene, camera);
-  threeCanvas.toBlob(blob => {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'voxit.png';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }, 'image/png');
-});
-
-// ─── RESIZE ───────────────────────────────────────────────────────────────────
-function onResize() {
-  const w = threeCanvas.clientWidth;
-  const h = threeCanvas.clientHeight;
-  renderer.setSize(w, h, false);
-  const asp = w / h;
-  camera.left = -camSize * asp;
-  camera.right = camSize * asp;
-  camera.top = camSize;
-  camera.bottom = -camSize;
-  camera.updateProjectionMatrix();
-}
-window.addEventListener('resize', onResize);
-onResize();
-
-// ─── ANIMATE ──────────────────────────────────────────────────────────────────
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
-}
-animate();
 </script>
 </body>
 </html>
