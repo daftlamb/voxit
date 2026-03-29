@@ -115,8 +115,8 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
 
     <h3>Camera</h3>
     <div class="ctrl">
-      <label>Angle <span id="cam-angle-val">315°</span></label>
-      <input type="range" id="cam-angle" min="0" max="360" value="315"/>
+      <label>Angle <span id="cam-angle-val">225°</span></label>
+      <input type="range" id="cam-angle" min="0" max="360" value="225"/>
     </div>
     <div class="ctrl">
       <label>Elevation <span id="cam-elev-val">10</span></label>
@@ -192,7 +192,7 @@ document.getElementById('custom-color').addEventListener('input', e => {
 // ─── HEERICH SETUP ────────────────────────────────────────────────────────────
 let TILE = 28;
 let BASE_SIZE = 6;
-let camAngle = 315;
+let camAngle = 225;
 let camElev = 10;
 
 function makeEngine() {
@@ -467,14 +467,14 @@ function textToVoxels(text, scale) {
     }
   }
 
-  // Text voxels — flip axes based on user checkboxes
+  // Text voxels — canvas: col=right, row=down → Heerich: x=col, z=-row
   const flipX = document.getElementById('flip-x').checked;
   const flipZ = document.getElementById('flip-z').checked;
   const maxCol2 = Math.max(...grid.map(g => g.col));
   const maxRow2 = Math.max(...grid.map(g => g.row));
   for (const { col, row } of grid) {
-    const x = (flipX ? (maxCol2 - col) : col) + offX;
-    const z = (flipZ ? (maxRow2 - row) : row) + offZ;
+    const x = (flipX ? maxCol2 - col : col) + offX;
+    const z = (flipZ ? maxRow2 - row : row) + offZ;
     for (let h = 1; h <= scale; h++) {
       engine.addBox({ position: [x, h, z], size: [1,1,1], style: makeFaceStyle(currentColor) });
     }
