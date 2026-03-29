@@ -361,16 +361,6 @@ document.getElementById('tile-size-input').addEventListener('change', e => {
   render();
 });
 
-document.getElementById('btn-apply-base').addEventListener('click', () => {
-  BASE_SIZE = Math.max(2, Math.min(20, parseInt(document.getElementById('base-size-input').value) || 6));
-  document.getElementById('base-size-input').value = BASE_SIZE;
-  engine.clear();
-  buildBase();
-  history.length = 0;
-  voxelMap.clear();
-  render();
-});
-
 document.getElementById('btn-undo').addEventListener('click', () => {
   const last = history.pop();
   if (!last) return;
