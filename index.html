@@ -396,65 +396,74 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 // ─── TEXT → VOXEL ─────────────────────────────────────────────────────────────
 function textToVoxels(text, scale) {
-  const FONT_SIZE = 8; // render at 8px pixel font
+  const PX = 12; // pixel size per voxel
+  const txt = text.toUpperCase();
   const offscreen = document.createElement('canvas');
-  offscreen.width = text.length * FONT_SIZE * scale + 8;
-  offscreen.height = FONT_SIZE * scale + 4;
+  const W = txt.length * PX * 8 + 16;
+  const H = PX * 10;
+  offscreen.width = W;
+  offscreen.height = H;
   const ctx = offscreen.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#000';
-  ctx.font = `bold ${FONT_SIZE * scale}px monospace`;
+  ctx.font = `bold ${PX * 8}px monospace`;
   ctx.textBaseline = 'top';
-  ctx.fillText(text.toUpperCase(), 2, 2);
+  ctx.fillText(txt, 4, 0);
 
-  const pixels = ctx.getImageData(0, 0, offscreen.width, offscreen.height).data;
-  const W = offscreen.width, H = offscreen.height;
+  const imgData = ctx.getImageData(0, 0, W, H).data;
 
-  // Sample every `scale` pixels to get logical grid
-  const cols = Math.ceil(W / scale);
-  const rows = Math.ceil(H / scale);
+  // Downsample: each voxel = PX×PX block, vote by majority
+  const cols = Math.ceil(W / PX);
+  const rows = Math.ceil(H / PX);
+  const grid = [];
 
-  // Clear and rebuild
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      let dark = 0, total = 0;
+      for (let dy = 0; dy < PX; dy++) {
+        for (let dx = 0; dx < PX; dx++) {
+          const px = col * PX + dx, py = row * PX + dy;
+          if (px >= W || py >= H) continue;
+          const i = (py * W + px) * 4;
+          const a = imgData[i + 3];
+          if (a > 10) { total++; if (imgData[i] < 128) dark++; }
+        }
+      }
+      if (dark > 0) grid.push({ col, row });
+    }
+  }
+
+  if (!grid.length) { console.warn('No pixels found'); return; }
+
+  // Center
+  const minCol = Math.min(...grid.map(g => g.col));
+  const maxCol = Math.max(...grid.map(g => g.col));
+  const minRow = Math.min(...grid.map(g => g.row));
+  const maxRow = Math.max(...grid.map(g => g.row));
+  const offX = -Math.floor((maxCol - minCol) / 2) - minCol;
+  const offZ = -Math.floor((maxRow - minRow) / 2) - minRow;
+
   engine.clear();
   history.length = 0;
   voxelMap.clear();
 
-  const offsetX = -Math.floor(cols / 2);
-  const offsetZ = -Math.floor(rows / 2);
-
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      // Sample center of each logical pixel
-      const px = Math.min(col * scale + Math.floor(scale/2), W-1);
-      const py = Math.min(row * scale + Math.floor(scale/2), H-1);
-      const idx = (py * W + px) * 4;
-      const alpha = pixels[idx + 3];
-      const brightness = pixels[idx]; // R channel
-      if (alpha > 128 && brightness < 128) {
-        const x = col + offsetX;
-        const z = row + offsetZ;
-        engine.addBox({
-          position: [x, 1, z],
-          size: [1, 1, 1],
-          style: makeFaceStyle(currentColor)
-        });
-        voxelMap.set(voxelKey(x, z), 1);
-      }
+  // Base
+  for (let col = minCol - 1; col <= maxCol + 1; col++) {
+    for (let row = minRow - 1; row <= maxRow + 1; row++) {
+      engine.addBox({ position: [col + offX, 0, row + offZ], size: [1,1,1],
+        style: { fill: '#e8e4de', stroke: '#aaa', strokeWidth: 0.4 }});
     }
   }
 
-  // Add base around text
-  const pad = 1;
-  for (let col = -pad; col < cols + pad; col++) {
-    for (let row = -pad; row < rows + pad; row++) {
-      const x = col + offsetX;
-      const z = row + offsetZ;
-      engine.addBox({
-        position: [x, 0, z],
-        size: [1, 1, 1],
-        style: { fill: '#e8e4de', stroke: '#aaa', strokeWidth: 0.4 }
-      });
+  // Text voxels — stack by scale height
+  for (const { col, row } of grid) {
+    const x = col + offX, z = row + offZ;
+    for (let h = 1; h <= scale; h++) {
+      engine.addBox({ position: [x, h, z], size: [1,1,1], style: makeFaceStyle(currentColor) });
     }
+    voxelMap.set(voxelKey(x, z), scale);
   }
+
   render();
 }
 
