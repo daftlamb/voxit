@@ -433,7 +433,8 @@ function textToVoxels(text, scale) {
     }
   }
 
-  if (!grid.length) { console.warn('No pixels found'); return; }
+  if (!grid.length) { console.warn('No pixels found - canvas empty?'); return; }
+  console.log('Grid cells found:', grid.length);
 
   // Center
   const minCol = Math.min(...grid.map(g => g.col));
@@ -470,6 +471,7 @@ function textToVoxels(text, scale) {
 document.getElementById('btn-gen-text').addEventListener('click', () => {
   const text = document.getElementById('text-input').value || 'VOX';
   const scale = parseInt(document.getElementById('text-size').value);
+  console.log('Generating:', text, 'scale:', scale);
   textToVoxels(text, scale);
 });
 
