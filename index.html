@@ -434,7 +434,7 @@ function textToVoxels(text, scale) {
   const offX = -Math.floor((maxCol - minCol) / 2) - minCol;
   const offZ = -Math.floor((maxRow - minRow) / 2) - minRow;
 
-  engine.clear();
+  engine = makeEngine();
   history.length = 0;
   voxelMap.clear();
 
