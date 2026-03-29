@@ -386,7 +386,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 // ─── TEXT → VOXEL ─────────────────────────────────────────────────────────────
 function textToVoxels(text, scale) {
-  const PX = 12; // pixel size per voxel
+  const PX = 6; // pixel size per voxel — smaller = finer detail
   const txt = text.toUpperCase();
   const offscreen = document.createElement('canvas');
   const W = txt.length * PX * 8 + 16;
@@ -446,9 +446,11 @@ function textToVoxels(text, scale) {
     }
   }
 
-  // Text voxels — stack by scale height
+  // Text voxels — flip Z (row) to fix upside-down
+  const maxRow2 = Math.max(...grid.map(g => g.row));
   for (const { col, row } of grid) {
-    const x = col + offX, z = row + offZ;
+    const x = col + offX;
+    const z = (maxRow2 - row) + offZ; // flip vertically
     for (let h = 1; h <= scale; h++) {
       engine.addBox({ position: [x, h, z], size: [1,1,1], style: makeFaceStyle(currentColor) });
     }
