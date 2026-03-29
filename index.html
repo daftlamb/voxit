@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Vox It ✦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0d0d0d;color:#ccc;font-family:"Outfit",sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+#topbar{
+  display:flex;align-items:center;gap:10px;padding:8px 14px;
+  background:#1a1a1a;border-bottom:1px solid #333;flex-shrink:0;
+}
+#topbar h1{font-size:14px;color:#f0c040;letter-spacing:2px;}
+.btn-icon{
+  background:none;border:1px solid #444;color:#aaa;border-radius:6px;height:28px;
+  cursor:pointer;font-family:inherit;font-size:12px;padding:0 10px;transition:all .15s;
+}
+.btn-icon:hover{border-color:#f0c040;color:#f0c040;}
+.sep{width:1px;height:20px;background:#333;margin:0 4px;}
+#main{display:flex;flex:1;overflow:hidden;}
+#left{width:200px;background:#1a1a1a;border-right:1px solid #333;padding:12px;overflow-y:auto;}
+#left h3{font-size:11px;color:#666;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;}
+.tool-btn{
+  width:100%;padding:10px;margin-bottom:6px;background:#222;border:1px solid #444;
+  color:#aaa;cursor:pointer;border-radius:3px;font-size:11px;transition:all .15s;
+}
+.tool-btn:hover{background:#2a2a2a;border-color:#f0c040;}
+.tool-btn.active{background:#3a2800;border-color:#f0c040;color:#f0c040;}
+.mode-btn{
+  width:48%;padding:8px;background:#222;border:1px solid #444;color:#aaa;
+  cursor:pointer;border-radius:3px;font-size:10px;transition:all .15s;
+}
+.mode-btn:hover{background:#2a2a2a;}
+.mode-btn.active{background:#2a0a0a;border-color:#e04040;color:#e04040;}
+#right{flex:1;position:relative;}
+#three-canvas{display:block;width:100%;height:100%;}
+#hint{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  color:#333;font-size:12px;text-align:center;pointer-events:none;
+}
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;
+  align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:#1a1a1a;border:1px solid #333;max-width:420px;width:92%;
+  padding:28px;position:relative;border-radius:4px;
+}
+.modal-box h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:14px;color:#f0c040;font-weight:500;}
+.modal-box p{font-size:12px;line-height:1.8;color:#888;}
+.modal-box strong{color:#ccc;}
+.modal-close{
+  position:absolute;top:16px;right:16px;background:none;border:none;
+  font-size:20px;cursor:pointer;color:#666;
+}
+.modal-close:hover{color:#f0c040;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="about-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="about-close">✕</button>
+    <h2>Vox It ✦</h2>
+    <p>矢量版 3D 构成工具。在 256×256 底座上通过几何体的加减运算创建等轴测插图。</p>
+    <p style="margin-top:12px;">
+      <strong>加法模式</strong> — 放置立方体/圆柱/球，堆叠形状。<br/>
+      <strong>减法模式</strong> — 从底座上雕刻、挖洞。<br/>
+      <strong>CSG 布尔运算</strong> — 实时计算，矢量输出。
+    </p>
+    <p style="margin-top:12px;color:#555;font-size:11px;">导出 PNG 用于插图设计，SVG 用于矢量编辑。</p>
+  </div>
+</div>
+
+<div id="topbar">
+  <h1>Vox It ✦</h1>
+  <button class="btn-icon" id="btn-theme" title="Toggle dark/light mode">☀</button>
+  <div class="sep"></div>
+  <button class="btn-icon" id="btn-reset">Reset</button>
+  <button class="btn-icon" id="btn-export">PNG</button>
+  <div class="sep"></div>
+  <button class="btn-icon" id="btn-about">i</button>
+</div>
+
+<div id="main">
+  <div id="left">
+    <h3>Mode</h3>
+    <div style="display:flex;gap:4px;margin-bottom:16px;">
+      <button class="mode-btn active" data-mode="add">+ Add</button>
+      <button class="mode-btn" data-mode="subtract">− Subtract</button>
+    </div>
+    
+    <h3>Shapes</h3>
+    <button class="tool-btn active" data-shape="box">Cube</button>
+    <button class="tool-btn" data-shape="cylinder">Cylinder</button>
+    <button class="tool-btn" data-shape="sphere">Sphere</button>
+  </div>
+  
+  <div id="right">
+    <canvas id="three-canvas"></canvas>
+    <div id="hint">Select a shape and click to place</div>
+  </div>
+</div>
+
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'https://cdn.jsdelivr.net/npm/three-bvh-csg@0.0.16/build/index.module.js';
+
+// ─── SCENE SETUP ──────────────────────────────────────────────────────────────
+const threeCanvas = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0d0d0d');
+
+// Isometric orthographic camera
+const aspect = 1;
+const camSize = 200;
+const camera = new THREE.OrthographicCamera(-camSize, camSize, camSize, -camSize, 0.1, 2000);
+camera.position.set(300, 300, 300);
+camera.lookAt(0, 0, 0);
+
+const controls = new OrbitControls(camera, threeCanvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+
+// ─── LIGHTS ───────────────────────────────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambient);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+sunLight.position.set(200, 400, 200);
+sunLight.castShadow = true;
+scene.add(sunLight);
+
+const fillLight = new THREE.DirectionalLight(0xaabbff, 0.4);
+fillLight.position.set(-200, 100, -100);
+scene.add(fillLight);
+
+// ─── MATERIALS ────────────────────────────────────────────────────────────────
+const paletteFace = [0xe8e0d0, 0xd4c8b0, 0xb8a88a]; // top, left, right face colors
+function makeMaterial(hex) {
+  return new THREE.MeshToonMaterial({ color: hex });
+}
+const matTop   = makeMaterial(paletteFace[0]);
+const matSide  = makeMaterial(paletteFace[1]);
+const matEdge  = new THREE.LineBasicMaterial({ color: 0x1a1a1a });
+
+// ─── BASE SLAB ────────────────────────────────────────────────────────────────
+const BASE_SIZE = 256;
+const BASE_THICK = 20;
+const UNIT = 32; // grid unit size
+
+let baseResult = null; // the current CSG result mesh
+const evaluator = new Evaluator();
+
+// Build initial base brush
+function makeBaseBrush() {
+  const geo = new THREE.BoxGeometry(BASE_SIZE, BASE_THICK, BASE_SIZE);
+  const brush = new Brush(geo, new THREE.MeshToonMaterial({ color: 0xd4c8b0 }));
+  brush.position.set(0, 0, 0);
+  brush.updateMatrixWorld();
+  return brush;
+}
+
+let baseBrush = makeBaseBrush();
+let operations = []; // list of {shape, mode, position, size}
+
+function rebuildCSG() {
+  if (baseResult) {
+    scene.remove(baseResult);
+    baseResult.geometry.dispose();
+  }
+
+  let current = baseBrush;
+  for (const op of operations) {
+    const geo = makeShapeGeo(op);
+    const brush = new Brush(geo, new THREE.MeshToonMaterial({ color: op.mode === 'add' ? 0xe8e0d0 : 0xd4c8b0 }));
+    brush.position.copy(op.position);
+    brush.updateMatrixWorld();
+    const type = op.mode === 'add' ? ADDITION : SUBTRACTION;
+    current = evaluator.evaluate(current, brush, type);
+  }
+
+  baseResult = current;
+  baseResult.castShadow = true;
+  baseResult.receiveShadow = true;
+  scene.add(baseResult);
+
+  // Add edge lines
+  scene.children.filter(c => c.isLineSegments).forEach(l => scene.remove(l));
+  const edges = new THREE.EdgesGeometry(baseResult.geometry, 15);
+  const lines = new THREE.LineSegments(edges, matEdge);
+  scene.add(lines);
+
+  document.getElementById('hint').style.display = 'none';
+}
+
+function makeShapeGeo(op) {
+  const s = op.size;
+  if (op.shape === 'box')      return new THREE.BoxGeometry(s, s, s);
+  if (op.shape === 'cylinder') return new THREE.CylinderGeometry(s/2, s/2, s, 16);
+  if (op.shape === 'sphere')   return new THREE.SphereGeometry(s/2, 16, 12);
+  return new THREE.BoxGeometry(s, s, s);
+}
+
+// Initial build
+rebuildCSG();
+
+// ─── GRID HELPER ──────────────────────────────────────────────────────────────
+const grid = new THREE.GridHelper(BASE_SIZE, BASE_SIZE / UNIT, 0x444444, 0x333333);
+grid.position.y = BASE_THICK / 2 + 0.5;
+scene.add(grid);
+
+// ─── INTERACTION ──────────────────────────────────────────────────────────────
+let currentMode = 'add';
+let currentShape = 'box';
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// Hover plane (top of base slab)
+const hoverPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(BASE_SIZE * 2, BASE_SIZE * 2),
+  new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })
+);
+hoverPlane.rotation.x = -Math.PI / 2;
+hoverPlane.position.y = BASE_THICK / 2 + 0.5;
+scene.add(hoverPlane);
+
+// Ghost preview
+let ghostMesh = null;
+function updateGhost(pos) {
+  if (ghostMesh) scene.remove(ghostMesh);
+  const geo = makeShapeGeo({ shape: currentShape, size: UNIT });
+  const mat = new THREE.MeshToonMaterial({
+    color: currentMode === 'add' ? 0xf0c040 : 0xe04040,
+    transparent: true, opacity: 0.5
+  });
+  ghostMesh = new THREE.Mesh(geo, mat);
+  ghostMesh.position.copy(pos);
+  ghostMesh.position.y = BASE_THICK / 2 + UNIT / 2;
+  scene.add(ghostMesh);
+}
+
+function snapToGrid(x, z) {
+  return new THREE.Vector3(
+    Math.round(x / UNIT) * UNIT,
+    BASE_THICK / 2 + UNIT / 2,
+    Math.round(z / UNIT) * UNIT
+  );
+}
+
+threeCanvas.addEventListener('mousemove', e => {
+  const rect = threeCanvas.getBoundingClientRect();
+  mouse.x =  (e.clientX - rect.left) / rect.width  * 2 - 1;
+  mouse.y = -(e.clientY - rect.top)  / rect.height * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(hoverPlane);
+  if (hits.length) {
+    const snapped = snapToGrid(hits[0].point.x, hits[0].point.z);
+    updateGhost(snapped);
+  }
+});
+
+threeCanvas.addEventListener('click', e => {
+  const rect = threeCanvas.getBoundingClientRect();
+  mouse.x =  (e.clientX - rect.left) / rect.width  * 2 - 1;
+  mouse.y = -(e.clientY - rect.top)  / rect.height * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(hoverPlane);
+  if (!hits.length) return;
+  const snapped = snapToGrid(hits[0].point.x, hits[0].point.z);
+  operations.push({
+    shape: currentShape,
+    mode: currentMode,
+    position: new THREE.Vector3(snapped.x, BASE_THICK / 2 + UNIT / 2, snapped.z),
+    size: UNIT
+  });
+  rebuildCSG();
+  if (ghostMesh) { scene.remove(ghostMesh); ghostMesh = null; }
+});
+
+// ─── UI BINDINGS ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentShape = btn.dataset.shape;
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    if (btn.dataset.mode === 'subtract') {
+      btn.style.background = '#2a0a0a';
+      btn.style.borderColor = '#e04040';
+      btn.style.color = '#e04040';
+    }
+  });
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  operations = [];
+  rebuildCSG();
+});
+
+// Dark/light toggle
+let isDark = true;
+document.getElementById('btn-theme').addEventListener('click', function() {
+  isDark = !isDark;
+  this.textContent = isDark ? '☀' : '☽';
+  scene.background = new THREE.Color(isDark ? '#0d0d0d' : '#f0ede8');
+  document.body.style.background = isDark ? '#0d0d0d' : '#f0ede8';
+});
+
+// About modal
+const aboutModal = document.getElementById('about-modal');
+document.getElementById('btn-about').addEventListener('click', () => aboutModal.classList.add('open'));
+document.getElementById('about-close').addEventListener('click', () => aboutModal.classList.remove('open'));
+aboutModal.addEventListener('click', e => { if (e.target === aboutModal) aboutModal.classList.remove('open'); });
+
+// Export PNG
+document.getElementById('btn-export').addEventListener('click', () => {
+  renderer.render(scene, camera);
+  threeCanvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'voxit.png';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, 'image/png');
+});
+
+// ─── RESIZE ───────────────────────────────────────────────────────────────────
+function onResize() {
+  const w = threeCanvas.clientWidth;
+  const h = threeCanvas.clientHeight;
+  renderer.setSize(w, h, false);
+  const asp = w / h;
+  camera.left = -camSize * asp;
+  camera.right = camSize * asp;
+  camera.top = camSize;
+  camera.bottom = -camSize;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// ─── ANIMATE ──────────────────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
