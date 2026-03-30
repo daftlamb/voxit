@@ -457,24 +457,23 @@ function textToVoxels(text, scale) {
   history.length = 0;
   voxelMap.clear();
 
-  // Base plate
+  // Base plate at y=1 (below text which starts at y=0)
   for (let col = minCol - 1; col <= maxCol + 1; col++) {
     for (let row = minRow - 1; row <= maxRow + 1; row++) {
-      engine.addBox({ position: [col + offX, 0, row + offZ], size: [1,1,1],
+      engine.addBox({ position: [col + offX, 1, row + offZ], size: [1,1,1],
         style: { fill: '#e8e4de', stroke: '#aaa', strokeWidth: 0.4 }});
     }
   }
 
-  // Text voxels — row 0 = top of canvas, should appear at front (low Z)
-  // Heerich: +Z = away from viewer, so flip row → invert Z so text reads correctly
+  // Text voxels: y=0 and above (negative in heerich = visually up)
   const flipX = document.getElementById('flip-x').checked;
   const flipZ = document.getElementById('flip-z').checked;
   for (const { col, row } of grid) {
     const rawX = col + offX;
-    const rawZ = (maxRow - row) + offZ; // default: invert row so text reads L→R facing viewer
+    const rawZ = (maxRow - row) + offZ;
     const x = flipX ? -rawX : rawX;
     const z = flipZ ? -rawZ : rawZ;
-    for (let h = 1; h <= scale; h++) {
+    for (let h = 0; h < scale; h++) {
       engine.addBox({ position: [x, -h, z], size: [1,1,1], style: makeFaceStyle(currentColor) });
     }
     voxelMap.set(voxelKey(x, z), scale);
