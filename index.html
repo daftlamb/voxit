@@ -53,7 +53,7 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
   width:24px;height:24px;border:2px solid transparent;border-radius:3px;cursor:pointer;
   transition:border-color .1s;
 }
-.color-swatch.active{border-color:#333;}
+.color-swatch.active{border-color:#333;border-width:2px;transform:scale(1.15);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .modal-box{background:#f0ede8;border:1px solid #ccc;max-width:420px;width:92%;padding:28px;position:relative;border-radius:4px;}
@@ -407,23 +407,23 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 // ─── TEXT → VOXEL ─────────────────────────────────────────────────────────────
 function textToVoxels(text, scale) {
-  const PX = 4; // pixel size per voxel — smaller = finer detail
+  const PX = 6; // larger = more readable
   const txt = text.toUpperCase();
   const offscreen = document.createElement('canvas');
-  const W = txt.length * PX * 8 + 16;
-  const H = PX * 10;
+  const W = txt.length * PX * 7 + PX * 4;
+  const H = PX * 12;
   offscreen.width = W;
   offscreen.height = H;
   const ctx = offscreen.getContext('2d');
-  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#000';
   ctx.font = `bold ${PX * 8}px monospace`;
   ctx.textBaseline = 'top';
-  ctx.fillText(txt, 4, 0);
+  ctx.fillText(txt, PX, PX);
 
   const imgData = ctx.getImageData(0, 0, W, H).data;
 
-  // Downsample: each voxel = PX×PX block, vote by majority
   const cols = Math.ceil(W / PX);
   const rows = Math.ceil(H / PX);
   const grid = [];
@@ -435,19 +435,17 @@ function textToVoxels(text, scale) {
         for (let dx = 0; dx < PX; dx++) {
           const px = col * PX + dx, py = row * PX + dy;
           if (px >= W || py >= H) continue;
+          total++;
           const i = (py * W + px) * 4;
-          const a = imgData[i + 3];
-          if (a > 10) { total++; if (imgData[i] < 128) dark++; }
+          if (imgData[i] < 128) dark++;
         }
       }
-      if (dark > 0) grid.push({ col, row });
+      if (total > 0 && dark / total > 0.35) grid.push({ col, row });
     }
   }
 
-  if (!grid.length) { console.warn('No pixels found - canvas empty?'); return; }
-  console.log('Grid cells found:', grid.length);
+  if (!grid.length) { alert('No pixels — try different text'); return; }
 
-  // Center
   const minCol = Math.min(...grid.map(g => g.col));
   const maxCol = Math.max(...grid.map(g => g.col));
   const minRow = Math.min(...grid.map(g => g.row));
@@ -459,7 +457,7 @@ function textToVoxels(text, scale) {
   history.length = 0;
   voxelMap.clear();
 
-  // Base
+  // Base plate
   for (let col = minCol - 1; col <= maxCol + 1; col++) {
     for (let row = minRow - 1; row <= maxRow + 1; row++) {
       engine.addBox({ position: [col + offX, 0, row + offZ], size: [1,1,1],
@@ -467,14 +465,15 @@ function textToVoxels(text, scale) {
     }
   }
 
-  // Text voxels — canvas: col=right, row=down → Heerich: x=col, z=-row
+  // Text voxels — row 0 = top of canvas, should appear at front (low Z)
+  // Heerich: +Z = away from viewer, so flip row → invert Z so text reads correctly
   const flipX = document.getElementById('flip-x').checked;
   const flipZ = document.getElementById('flip-z').checked;
-  const maxCol2 = Math.max(...grid.map(g => g.col));
-  const maxRow2 = Math.max(...grid.map(g => g.row));
   for (const { col, row } of grid) {
-    const x = (flipX ? maxCol2 - col : col) + offX;
-    const z = (flipZ ? maxRow2 - row : row) + offZ;
+    const rawX = col + offX;
+    const rawZ = (maxRow - row) + offZ; // default: invert row so text reads L→R facing viewer
+    const x = flipX ? -rawX : rawX;
+    const z = flipZ ? -rawZ : rawZ;
     for (let h = 1; h <= scale; h++) {
       engine.addBox({ position: [x, h, z], size: [1,1,1], style: makeFaceStyle(currentColor) });
     }
