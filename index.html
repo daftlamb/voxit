@@ -495,6 +495,14 @@ document.getElementById('text-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('btn-gen-text').click();
 });
 
+// Flip checkboxes: re-generate if text exists
+['flip-x','flip-z'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    const text = document.getElementById('text-input').value;
+    if (text) document.getElementById('btn-gen-text').click();
+  });
+});
+
 document.getElementById('btn-export-svg').addEventListener('click', () => {
   const svg = engine.toSVG({ padding: 40 });
   const blob = new Blob([svg], { type: 'image/svg+xml' });
