@@ -42,7 +42,7 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
 .mode-btn.sub.active{background:#ead0d0;border-color:#c06060;color:#904040;}
 #right{flex:1;position:relative;overflow:hidden;cursor:crosshair;}
 #svg-container{width:100%;height:100%;position:relative;}
-#vox-svg{width:100%;height:100%;display:block;}
+#vox-svg{width:100%;height:100%;display:block;cursor:crosshair;}
 #ghost-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
 .ctrl{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;}
 .ctrl label{font-size:10px;color:#999;}
@@ -99,7 +99,7 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
   <button class="btn-icon" id="btn-export-png">PNG</button>
   <div class="sep"></div>
   <label style="font-size:11px;color:#999;">Tile</label>
-  <input id="tile-size-input" type="number" min="10" max="100" step="5" value="28"
+  <input id="tile-size-input" type="number" min="6" max="100" step="2" value="18"
     style="width:52px;background:#f8f6f2;border:1px solid #ccc;color:#333;padding:3px 6px;font-size:11px;font-family:inherit;border-radius:3px;text-align:center;"/>
   <div class="sep"></div>
   <button class="btn-icon" id="btn-about">i</button>
@@ -190,7 +190,7 @@ document.getElementById('custom-color').addEventListener('input', e => {
 });
 
 // ─── HEERICH SETUP ────────────────────────────────────────────────────────────
-let TILE = 28;
+let TILE = 18;
 let BASE_SIZE = 6;
 let camAngle = 225;
 let camElev = 15;
@@ -329,12 +329,36 @@ function rgbToHex(r, g, b) {
 }
 
 // ─── CLICK ────────────────────────────────────────────────────────────────────
+let _dragMoved = false;
 voxSvg.addEventListener('click', e => {
+  if (_dragMoved) return; // suppress click after drag
   const pt = svgPoint(e);
   if (!pt) return;
   const { x, z } = svgToVoxel(pt.svgX, pt.svgY);
   placeVoxel(x, z);
 });
+
+// ─── DRAG TO ROTATE ────────────────────────────────────────────────────────────
+let _dragging = false, _dragStartX = 0, _dragAngleStart = 0;
+voxSvg.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  _dragging = true;
+  _dragMoved = false;
+  _dragStartX = e.clientX;
+  _dragAngleStart = camAngle;
+  e.preventDefault();
+});
+window.addEventListener('mousemove', e => {
+  if (!_dragging) return;
+  const dx = e.clientX - _dragStartX;
+  if (Math.abs(dx) > 3) _dragMoved = true;
+  camAngle = (_dragAngleStart - dx * 0.5 + 360) % 360;
+  document.getElementById('cam-angle').value = Math.round(camAngle);
+  document.getElementById('cam-angle-val').textContent = Math.round(camAngle) + '°';
+  engine.setCamera({ type: 'oblique', angle: camAngle, distance: camElev });
+  render();
+});
+window.addEventListener('mouseup', () => { _dragging = false; });
 
 // ─── UI BINDINGS ──────────────────────────────────────────────────────────────
 document.querySelectorAll('.mode-btn').forEach(b => {
