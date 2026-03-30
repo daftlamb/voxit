@@ -475,7 +475,7 @@ function textToVoxels(text, scale) {
     const x = flipX ? -rawX : rawX;
     const z = flipZ ? -rawZ : rawZ;
     for (let h = 1; h <= scale; h++) {
-      engine.addBox({ position: [x, h, z], size: [1,1,1], style: makeFaceStyle(currentColor) });
+      engine.addBox({ position: [x, -h, z], size: [1,1,1], style: makeFaceStyle(currentColor) });
     }
     voxelMap.set(voxelKey(x, z), scale);
   }
