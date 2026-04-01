@@ -403,35 +403,17 @@ function renderSketch() {
   if (gl) { gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); }
   brush.clear();
 
-  // face fill colors by type (light wash)
-  const fillColors = { top: '#e8e4dc', left: '#c8c4bc', right: '#d8d4cc' };
-  const strokeColors = { top: '#2a2a2a', left: '#111', right: '#333' };
-  const strokeTypes = { top: 'HB', left: '2B', right: 'HB' };
-  const strokeWeights = { top: 0.5, left: 0.9, right: 0.6 };
+  // outline only — SVG fill shows through underneath (fast + correct colors)
+  const strokeColors  = { top: '#1a1a1a', left: '#000', right: '#222', bottom: '#333', front: '#1a1a1a', back: '#333' };
+  const strokeTypes   = { top: 'HB', left: '2B', right: 'HB', front: 'HB', back: 'HB' };
+  const strokeWeights = { top: 0.45, left: 0.8, right: 0.55 };
 
-  // Pass 1: fill each face with brush.fill (watercolor wash)
-  faces.forEach(face => {
-    const type = face.type || 'top';
-    if (!fillColors[type]) return;
-    const pts = face.points.map(([x,y]) => [(x-vx)*scaleX-ox, (y-vy)*scaleY-oy]);
-    if (pts.length < 3) return;
-    try {
-      const poly = new brush.Polygon(pts);
-      brush.noStroke();
-      brush.fill(fillColors[type], 120);
-      brush.fillBleed(0.04, 'out');
-      brush.fillTexture(0.5, 0.3);
-      poly.fill();
-      brush.noFill();
-    } catch(e) { /* skip if polygon fails */ }
-  });
-
-  // Pass 2: draw outlines with brush strokes
+  brush.noFill();
   faces.forEach(face => {
     const type = face.type || 'top';
     const pts = face.points.map(([x,y]) => [(x-vx)*scaleX-ox, (y-vy)*scaleY-oy]);
     if (pts.length < 2) return;
-    brush.set(strokeTypes[type]||'HB', strokeColors[type]||'#333', strokeWeights[type]||0.6);
+    brush.set(strokeTypes[type]||'HB', strokeColors[type]||'#222', strokeWeights[type]||0.5);
     for (let i = 0; i < pts.length; i++) {
       const a = pts[i], b = pts[(i+1) % pts.length];
       brush.line(a[0], a[1], b[0], b[1]);
