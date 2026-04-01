@@ -383,38 +383,57 @@ function renderSketch() {
   const faces = engine.getFaces();
   if (!faces || faces.length === 0) return;
 
-  // Size sketch canvas to match svg-container
   const cont = document.getElementById('svg-container');
   const W = cont.clientWidth || 800;
   const H = cont.clientHeight || 600;
   if (sketchCvLive.width !== W || sketchCvLive.height !== H) {
     sketchCvLive.width = W; sketchCvLive.height = H;
-    brushLiveReady = false; // reinit on resize
+    brushLiveReady = false;
   }
   initBrushLive();
   if (!brushLiveReady) return;
 
-  // Get scene bounds from SVG viewBox
   const vb = voxSvg.getAttribute('viewBox');
   let vx = 0, vy = 0, vw = W, vh = H;
-  if (vb) { const p = vb.split(' ').map(Number); vx = p[0]; vy = p[1]; vw = p[2]; vh = p[3]; }
+  if (vb) { const p = vb.split(' ').map(Number); vx=p[0]; vy=p[1]; vw=p[2]; vh=p[3]; }
   const scaleX = W / vw, scaleY = H / vh;
   const ox = W / 2, oy = H / 2;
 
   const gl = sketchCvLive.getContext('webgl2');
-  if (gl) { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
+  if (gl) { gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); }
   brush.clear();
 
+  // face fill colors by type (light wash)
+  const fillColors = { top: '#e8e4dc', left: '#c8c4bc', right: '#d8d4cc' };
+  const strokeColors = { top: '#2a2a2a', left: '#111', right: '#333' };
+  const strokeTypes = { top: 'HB', left: '2B', right: 'HB' };
+  const strokeWeights = { top: 0.5, left: 0.9, right: 0.6 };
+
+  // Pass 1: fill each face with brush.fill (watercolor wash)
   faces.forEach(face => {
-    const type = face.type;
-    const btype = type === 'top' ? 'HB' : type === 'left' ? '2B' : 'HB';
-    const col   = type === 'top' ? '#333' : type === 'left' ? '#111' : '#444';
-    const w     = type === 'top' ? 0.5 : type === 'left' ? 0.9 : 0.6;
-    const pts   = face.points.map(([x, y]) => [(x - vx) * scaleX - ox, (y - vy) * scaleY - oy]);
+    const type = face.type || 'top';
+    if (!fillColors[type]) return;
+    const pts = face.points.map(([x,y]) => [(x-vx)*scaleX-ox, (y-vy)*scaleY-oy]);
+    if (pts.length < 3) return;
+    try {
+      const poly = new brush.Polygon(pts);
+      brush.noStroke();
+      brush.fill(fillColors[type], 120);
+      brush.fillBleed(0.04, 'out');
+      brush.fillTexture(0.5, 0.3);
+      poly.fill();
+      brush.noFill();
+    } catch(e) { /* skip if polygon fails */ }
+  });
+
+  // Pass 2: draw outlines with brush strokes
+  faces.forEach(face => {
+    const type = face.type || 'top';
+    const pts = face.points.map(([x,y]) => [(x-vx)*scaleX-ox, (y-vy)*scaleY-oy]);
     if (pts.length < 2) return;
-    brush.set(btype, col, w);
+    brush.set(strokeTypes[type]||'HB', strokeColors[type]||'#333', strokeWeights[type]||0.6);
     for (let i = 0; i < pts.length; i++) {
-      const a = pts[i], b = pts[(i + 1) % pts.length];
+      const a = pts[i], b = pts[(i+1) % pts.length];
       brush.line(a[0], a[1], b[0], b[1]);
     }
   });
