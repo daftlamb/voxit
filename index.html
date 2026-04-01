@@ -222,6 +222,9 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
       <label>Custom</label>
       <input type="color" id="custom-color" value="#aaaaaa" style="width:100%;height:26px;border:1px solid #ccc;border-radius:3px;cursor:pointer;"/>
     </div>
+
+    <h3>Assets</h3>
+    <div id="asset-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;"></div>
   </div>
 
   <!-- Center panel: three-view orthographic grid -->
@@ -264,6 +267,128 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
 <script type="module">
 import { Heerich } from './heerich.js';
 
+// ─── ASSETS ───────────────────────────────────────────────────────────────────
+// Each voxel: [x, y, z, color] — y is up, placed relative to (0,0,0)
+const ASSETS = [
+  { name:'Person', icon:'🧍', voxels:[
+    // head
+    [0,6,0,'#f5d0a0'],[1,6,0,'#f5d0a0'],[0,7,0,'#f5d0a0'],[1,7,0,'#f5d0a0'],
+    // hair
+    [0,8,0,'#3a2010'],[1,8,0,'#3a2010'],
+    // body
+    [0,4,0,'#4a80c0'],[1,4,0,'#4a80c0'],[0,5,0,'#4a80c0'],[1,5,0,'#4a80c0'],
+    // arms
+    [-1,4,0,'#f5d0a0'],[-1,5,0,'#4a80c0'],[2,4,0,'#f5d0a0'],[2,5,0,'#4a80c0'],
+    // legs
+    [0,2,0,'#2a4a80'],[1,2,0,'#2a4a80'],[0,3,0,'#2a4a80'],[1,3,0,'#2a4a80'],
+    // feet
+    [0,0,0,'#2a2010'],[1,0,0,'#2a2010'],[0,1,0,'#2a2010'],[1,1,0,'#2a2010'],
+  ]},
+  { name:'Sitting', icon:'🧑', voxels:[
+    // head
+    [0,5,0,'#f5d0a0'],[1,5,0,'#f5d0a0'],[0,6,0,'#f5d0a0'],[1,6,0,'#f5d0a0'],
+    [0,7,0,'#3a2010'],[1,7,0,'#3a2010'],
+    // body
+    [0,3,0,'#c04a4a'],[1,3,0,'#c04a4a'],[0,4,0,'#c04a4a'],[1,4,0,'#c04a4a'],
+    // arms
+    [-1,3,0,'#f5d0a0'],[2,3,0,'#f5d0a0'],
+    // legs (horizontal, sitting)
+    [0,2,0,'#2a4a80'],[1,2,0,'#2a4a80'],
+    [0,2,1,'#2a4a80'],[1,2,1,'#2a4a80'],
+    [0,2,2,'#2a4a80'],[1,2,2,'#2a4a80'],
+    // feet
+    [0,0,2,'#2a2010'],[1,0,2,'#2a2010'],
+  ]},
+  { name:'Chair', icon:'🪑', voxels:[
+    // seat
+    [0,2,0,'#c8a878'],[1,2,0,'#c8a878'],[2,2,0,'#c8a878'],
+    [0,2,1,'#c8a878'],[1,2,1,'#c8a878'],[2,2,1,'#c8a878'],
+    [0,2,2,'#c8a878'],[1,2,2,'#c8a878'],[2,2,2,'#c8a878'],
+    // back
+    [0,3,0,'#c8a878'],[1,3,0,'#c8a878'],[2,3,0,'#c8a878'],
+    [0,4,0,'#c8a878'],[1,4,0,'#c8a878'],[2,4,0,'#c8a878'],
+    // legs
+    [0,0,0,'#a07040'],[2,0,0,'#a07040'],[0,1,0,'#a07040'],[2,1,0,'#a07040'],
+    [0,0,2,'#a07040'],[2,0,2,'#a07040'],[0,1,2,'#a07040'],[2,1,2,'#a07040'],
+  ]},
+  { name:'Table', icon:'🪵', voxels:[
+    // top surface 4x4
+    [0,3,0,'#d4a870'],[1,3,0,'#d4a870'],[2,3,0,'#d4a870'],[3,3,0,'#d4a870'],
+    [0,3,1,'#d4a870'],[1,3,1,'#d4a870'],[2,3,1,'#d4a870'],[3,3,1,'#d4a870'],
+    [0,3,2,'#d4a870'],[1,3,2,'#d4a870'],[2,3,2,'#d4a870'],[3,3,2,'#d4a870'],
+    [0,3,3,'#d4a870'],[1,3,3,'#d4a870'],[2,3,3,'#d4a870'],[3,3,3,'#d4a870'],
+    // legs
+    [0,0,0,'#a07040'],[3,0,0,'#a07040'],[0,1,0,'#a07040'],[3,1,0,'#a07040'],[0,2,0,'#a07040'],[3,2,0,'#a07040'],
+    [0,0,3,'#a07040'],[3,0,3,'#a07040'],[0,1,3,'#a07040'],[3,1,3,'#a07040'],[0,2,3,'#a07040'],[3,2,3,'#a07040'],
+  ]},
+  { name:'Tree', icon:'🌳', voxels:[
+    // trunk
+    [1,0,1,'#7a5020'],[1,1,1,'#7a5020'],[1,2,1,'#7a5020'],
+    // canopy layers
+    [0,3,0,'#4a9040'],[1,3,0,'#4a9040'],[2,3,0,'#4a9040'],
+    [0,3,1,'#4a9040'],[1,3,1,'#5aaa50'],[2,3,1,'#4a9040'],
+    [0,3,2,'#4a9040'],[1,3,2,'#4a9040'],[2,3,2,'#4a9040'],
+    [0,4,0,'#3a8030'],[1,4,0,'#3a8030'],[2,4,0,'#3a8030'],
+    [0,4,1,'#3a8030'],[1,4,1,'#4a9040'],[2,4,1,'#3a8030'],
+    [0,4,2,'#3a8030'],[1,4,2,'#3a8030'],[2,4,2,'#3a8030'],
+    [1,5,1,'#2a7020'],[0,5,1,'#2a7020'],[2,5,1,'#2a7020'],[1,5,0,'#2a7020'],[1,5,2,'#2a7020'],
+    [1,6,1,'#2a7020'],
+  ]},
+  { name:'Lamp', icon:'💡', voxels:[
+    // base
+    [0,0,0,'#888'],[1,0,0,'#888'],[0,0,1,'#888'],[1,0,1,'#888'],
+    // pole
+    [0,1,0,'#aaa'],[0,2,0,'#aaa'],[0,3,0,'#aaa'],[0,4,0,'#aaa'],
+    // shade
+    [-1,5,0,'#f0e080'],[0,5,0,'#f0e080'],[1,5,0,'#f0e080'],
+    [-1,5,1,'#f0e080'],[0,5,1,'#f8f0a0'],[1,5,1,'#f0e080'],
+    [0,6,0,'#e0c040'],[0,6,1,'#e0c040'],
+  ]},
+  { name:'Sofa', icon:'🛋', voxels:[
+    // base
+    [0,1,0,'#8060a0'],[1,1,0,'#8060a0'],[2,1,0,'#8060a0'],[3,1,0,'#8060a0'],
+    [0,1,1,'#8060a0'],[1,1,1,'#9070b0'],[2,1,1,'#9070b0'],[3,1,1,'#8060a0'],
+    [0,1,2,'#8060a0'],[1,1,2,'#9070b0'],[2,1,2,'#9070b0'],[3,1,2,'#8060a0'],
+    // seat cushions
+    [0,2,0,'#9070b0'],[1,2,0,'#a080c0'],[2,2,0,'#a080c0'],[3,2,0,'#9070b0'],
+    [0,2,1,'#9070b0'],[1,2,1,'#b090d0'],[2,2,1,'#b090d0'],[3,2,1,'#9070b0'],
+    [0,2,2,'#9070b0'],[1,2,2,'#a080c0'],[2,2,2,'#a080c0'],[3,2,2,'#9070b0'],
+    // back
+    [0,3,0,'#8060a0'],[1,3,0,'#8060a0'],[2,3,0,'#8060a0'],[3,3,0,'#8060a0'],
+    [0,4,0,'#8060a0'],[1,4,0,'#8060a0'],[2,4,0,'#8060a0'],[3,4,0,'#8060a0'],
+    // armrests
+    [0,2,1,'#604080'],[0,3,1,'#604080'],[0,3,2,'#604080'],
+    [3,2,1,'#604080'],[3,3,1,'#604080'],[3,3,2,'#604080'],
+    // legs
+    [0,0,0,'#604080'],[3,0,0,'#604080'],[0,0,2,'#604080'],[3,0,2,'#604080'],
+  ]},
+  { name:'Cactus', icon:'🌵', voxels:[
+    // main stem
+    [1,0,1,'#3a8040'],[1,1,1,'#3a8040'],[1,2,1,'#3a8040'],[1,3,1,'#3a8040'],[1,4,1,'#3a8040'],[1,5,1,'#3a8040'],
+    // left arm
+    [0,2,1,'#3a8040'],[0,3,1,'#3a8040'],[0,4,1,'#3a8040'],
+    // right arm
+    [2,3,1,'#3a8040'],[2,4,1,'#3a8040'],[2,5,1,'#3a8040'],
+    // pot
+    [0,0,0,'#c06040'],[1,0,0,'#c06040'],[2,0,0,'#c06040'],
+    [0,0,1,'#c06040'],[2,0,1,'#c06040'],
+    [0,0,2,'#c06040'],[1,0,2,'#c06040'],[2,0,2,'#c06040'],
+  ]},
+];
+
+// Place asset at grid position (gx, gz) — y offset from ground
+function placeAsset(asset, gx, gz){
+  asset.voxels.forEach(([x,y,z,color])=>{
+    const px=gx+x, py=y, pz=gz+z;
+    const style = makeFaceStyle(color);
+    engine.addBox({ position:[px,py,pz], size:[1,1,1], style });
+    const key = voxelKey(px,pz);
+    voxelMap.set(key, Math.max(voxelMap.get(key)??-1, py));
+    history.push({ x:px, y:py, z:pz, mode:'add', color });
+  });
+  render();
+}
+
 // ─── PALETTE ──────────────────────────────────────────────────────────────────
 const PALETTE = [
   '#d4cfc8','#b8b0a4','#8c8478',
@@ -291,6 +416,24 @@ PALETTE.forEach(hex => {
 document.getElementById('custom-color').addEventListener('input', e => {
   currentColor = e.target.value;
   document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+});
+
+// ─── ASSET GRID UI ────────────────────────────────────────────────────────────
+const assetGrid = document.getElementById('asset-grid');
+// current drop position — place at center of scene, user can move after
+let assetDropX = 5, assetDropZ = 5;
+ASSETS.forEach(asset => {
+  const btn = document.createElement('button');
+  btn.className = 'tool-btn';
+  btn.style.cssText = 'font-size:18px;text-align:center;padding:6px 2px;line-height:1.2;';
+  btn.title = asset.name;
+  btn.innerHTML = `${asset.icon}<br><span style="font-size:9px;color:#999">${asset.name}</span>`;
+  btn.addEventListener('click', () => {
+    placeAsset(asset, assetDropX, assetDropZ);
+    assetDropX += 5; // offset next drop so they don't stack
+    if(assetDropX > 20){ assetDropX = 0; assetDropZ += 5; }
+  });
+  assetGrid.appendChild(btn);
 });
 
 // ─── HEERICH SETUP ────────────────────────────────────────────────────────────
