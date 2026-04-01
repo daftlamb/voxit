@@ -289,7 +289,13 @@ function render() {
   const match = svg.match(/viewBox="([^"]+)"/);
   if (match) voxSvg.setAttribute('viewBox', match[1]);
   voxSvg.innerHTML = inner;
-  if(sketchMode) renderSketch();
+  // in sketch mode: hide SVG strokes so brush lines take over
+  if(sketchMode){
+    voxSvg.querySelectorAll('polygon,path,rect,line').forEach(el=>{
+      el.setAttribute('stroke','none');
+    });
+    renderSketch();
+  }
 }
 
 render(); // initial empty render
@@ -626,7 +632,19 @@ document.getElementById('btn-sketch-mode').addEventListener('click', function(){
   this.style.borderColor = sketchMode ? '#a07010' : '';
   this.style.color = sketchMode ? '#a07010' : '';
   sketchCvLive.style.display = sketchMode ? 'block' : 'none';
-  if(sketchMode) renderSketch();
+  // hide SVG strokes in sketch mode, show in normal mode
+  voxSvg.style.setProperty('--sketch-stroke', sketchMode ? 'none' : '');
+  if(sketchMode){
+    voxSvg.querySelectorAll('polygon,path,rect,line').forEach(el=>{
+      el.dataset.origStroke = el.getAttribute('stroke')||'';
+      el.setAttribute('stroke','none');
+    });
+    renderSketch();
+  } else {
+    voxSvg.querySelectorAll('polygon,path,rect,line').forEach(el=>{
+      if(el.dataset.origStroke !== undefined) el.setAttribute('stroke', el.dataset.origStroke);
+    });
+  }
 });
 
 // ── Sketch: render voxel faces as brush strokes ──
