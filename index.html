@@ -97,6 +97,7 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
   <button class="btn-icon" id="btn-reset">Reset</button>
   <button class="btn-icon" id="btn-export-svg">SVG</button>
   <button class="btn-icon" id="btn-export-png">PNG</button>
+  <button class="btn-icon" id="btn-sketch" style="border-color:#a07010;color:#a07010;">✏ Sketch</button>
   <div class="sep"></div>
   <label style="font-size:11px;color:#999;">Tile</label>
   <input id="tile-size-input" type="number" min="6" max="100" step="2" value="18"
@@ -157,6 +158,7 @@ body{background:#f0ede8;color:#333;font-family:"Outfit",sans-serif;height:100vh;
   </div>
 </div>
 
+<script src="brush.js"></script>
 <script type="module">
 import { Heerich } from './heerich.js';
 
@@ -561,6 +563,77 @@ document.getElementById('btn-export-png').addEventListener('click', () => {
 
 // About modal
 const aboutModal = document.getElementById('about-modal');
+
+// ── Sketch: render voxel faces as brush strokes ──
+document.getElementById('btn-sketch').addEventListener('click', () => {
+  const faces = engine.getFaces();
+  if(!faces || faces.length===0){ alert('Nothing to sketch!'); return; }
+
+  // get bounding box of all projected points
+  const bbox = engine.getBoundingBox ? engine.getBoundingBox() : (() => {
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    faces.forEach(f=>{ f.points.forEach(([x,y])=>{ minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y); }); });
+    return {x:minX,y:minY,w:maxX-minX,h:maxY-minY};
+  })();
+
+  const PAD = 60;
+  const W = Math.round(bbox.w) + PAD*2;
+  const H = Math.round(bbox.h) + PAD*2;
+  const ox = -bbox.x + PAD;
+  const oy = -bbox.y + PAD;
+
+  // create offscreen canvas for brush
+  const sketchCv = document.createElement('canvas');
+  sketchCv.width = W; sketchCv.height = H;
+  document.body.appendChild(sketchCv); // must be in DOM for WebGL
+  sketchCv.style.cssText='position:fixed;top:-9999px;left:-9999px;';
+
+  try {
+    brush.load(sketchCv);
+  } catch(e) { console.error('brush.load failed',e); sketchCv.remove(); return; }
+
+  // paper bg canvas for compositing
+  const outCv = document.createElement('canvas');
+  outCv.width = W; outCv.height = H;
+  const outCtx = outCv.getContext('2d');
+  outCtx.fillStyle = '#f5f0e8';
+  outCtx.fillRect(0,0,W,H);
+
+  brush.clear('#f5f0e8');
+
+  // depth-sort faces (already sorted by heerich)
+  // draw fill areas first (light wash), then outlines with brush
+  faces.forEach(face => {
+    const pts = face.points.map(([x,y])=>[x+ox, y+oy]);
+    if(pts.length<2) return;
+    const type = face.type; // 'top','left','right'
+    // choose brush type by face
+    const btype = type==='top' ? 'HB' : type==='left' ? '2B' : 'HB';
+    const col = type==='top' ? '#2a2a2a' : type==='left' ? '#1a1a1a' : '#333333';
+    const w = type==='top' ? 0.6 : type==='left' ? 1.0 : 0.7;
+    brush.set(btype, col, w);
+    // draw each edge of the polygon
+    for(let i=0;i<pts.length;i++){
+      const a=pts[i], b=pts[(i+1)%pts.length];
+      // brush origin = canvas center
+      brush.line(a[0]-W/2, a[1]-H/2, b[0]-W/2, b[1]-H/2);
+    }
+  });
+
+  brush.render();
+  outCtx.drawImage(sketchCv, 0,0);
+  sketchCv.remove();
+
+  // download
+  outCv.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'voxit-sketch.png';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, 'image/png');
+});
+
 document.getElementById('btn-about').addEventListener('click', () => aboutModal.classList.add('open'));
 document.getElementById('about-close').addEventListener('click', () => aboutModal.classList.remove('open'));
 aboutModal.addEventListener('click', e => { if (e.target === aboutModal) aboutModal.classList.remove('open'); });

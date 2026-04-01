@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" style="border:1px solid red;"></canvas>
+<pre id="out"></pre>
+<script>
+const text = "VOX";
+const PX = 4;
+const W = text.length * PX * 8 + 16;
+const H = PX * 10;
+const c = document.getElementById('c');
+c.width = W; c.height = H;
+const ctx = c.getContext('2d');
+ctx.fillStyle = '#000';
+ctx.font = `bold ${PX * 8}px monospace`;
+ctx.textBaseline = 'top';
+ctx.fillText(text, 4, 0);
+
+const data = ctx.getImageData(0,0,W,H).data;
+let grid = [];
+const cols = Math.ceil(W/PX), rows = Math.ceil(H/PX);
+for (let row=0; row<rows; row++) {
+  for (let col=0; col<cols; col++) {
+    let dark=0;
+    for (let dy=0; dy<PX; dy++) for (let dx=0; dx<PX; dx++) {
+      const px=col*PX+dx, py=row*PX+dy;
+      if (px>=W||py>=H) continue;
+      const i=(py*W+px)*4;
+      if (data[i+3]>10 && data[i]<128) dark++;
+    }
+    if (dark>0) grid.push([col,row]);
+  }
+}
+
+// Print as ASCII
+let lines = Array.from({length:rows}, ()=>Array(cols).fill('.'));
+grid.forEach(([c,r])=> lines[r][c]='#');
+document.getElementById('out').textContent = 
+  'VOX in canvas coords (row=down, col=right):\n' +
+  lines.map(l=>l.join('')).join('\n') + 
+  '\n\nGrid count: ' + grid.length;
+</script>
+</body>
+</html>

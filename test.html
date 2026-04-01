@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>Vox It Test</title>
+<style>
+body{margin:0;background:#f0ede8;}
+canvas{display:block;}
+</style>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#f0ede8');
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(300, 300, 300);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+scene.add(ambient);
+
+const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+sun.position.set(200, 400, 200);
+scene.add(sun);
+
+// Test box
+const geo = new THREE.BoxGeometry(256, 20, 256);
+const mat = new THREE.MeshStandardMaterial({ color: 0xd8cfc4, roughness: 0.7, metalness: 0.1, flatShading: true });
+const mesh = new THREE.Mesh(geo, mat);
+scene.add(mesh);
+
+console.log('Mesh added:', mesh);
+
+// Grid
+const grid = new THREE.GridHelper(256, 8, 0x444444, 0x333333);
+grid.position.y = 10;
+scene.add(grid);
+
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
